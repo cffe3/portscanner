@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h> //for threads
 #include <arpa/inet.h>
 
 void error()
@@ -14,7 +15,7 @@ void error()
 	
 }
 
-int syn_scan()
+void *syn_scan()
 {
 	struct sockaddr_in s_sock;
 	
@@ -26,8 +27,7 @@ int syn_scan()
 	{
 		
 			error();
-	
-	return 1;		
+					
 	}
 	
 	s_sock.sin_family = AF_INET;
@@ -83,10 +83,9 @@ int syn_scan()
 printf( "[*]Done scanning \n" );
 printf( "[*]Cleaning up \n" );
 
-return 0;
 }
 
-int single_scan()
+void *single_scan()
 {
 	
 	struct sockaddr_in s_sock;
@@ -101,8 +100,7 @@ int single_scan()
 	{
 		
 		error();
-		
-	return 1;
+
 	}
 	
 	s_sock.sin_family = AF_INET;
@@ -142,18 +140,18 @@ int single_scan()
 	printf( "[*]Done scanning \n" );
 	printf( "[*]Cleaning up \n" );
 	close( serv_sock );
-	
-	return 0; //tells the OS that the program exited without errors
 }
- 
+
 int main()
 {
 	
 	int input;
 	
+	pthread_t syn_thread, single_thread; //thread id
+	
 	printf( "[0] Exit \n" );
 	printf( "[1] Syn Scan \n" );
-	printf( "[2] Single Port Syn Scan \n" );
+	printf( "[2] Single Scan \n" );
 	printf( "[*]Scan type: " );	
 	scanf( "%i", &input );
 	
@@ -161,75 +159,26 @@ int main()
 	//since 0 is exit
 	if( input == 1 )
 	{
-			
-		syn_scan();
-			
+		
+		printf( "[*]Creating threads \n" );
+		
+		//create thread to execute
+		pthread_create(&syn_thread, NULL, &syn_scan, NULL);
+		pthread_join( syn_thread, NULL);		
+				
 	}
-	//if equals 2,
-	//go straight to single port syn scan function
-	else if( input == 2 )
+	
+	if( input == 2 )
 	{
 		
-		single_scan();
+		printf( "[*]Creating threads \n" );
+		
+		//create thread to execute
+		pthread_create(&single_thread, NULL, &single_scan, NULL);
+		pthread_join( single_thread, NULL);
 		
 	}
-	//if equals 0, 
-	//throw a error and exit
-	else if( input == 0 )
-	{
-			
-		error();
-	
-	return 1;
-	}
-	
-return 0; //tells the OS that the program exited without errors
-}
-
-		{
-			
-			printf( "%i    closed \n", port );
-			
-		}
-		else
-		{
-			
-			printf( "%i    open \n", port );
 		
-		}
-		
-	close( serv_sock );
-	}
-		
-//once successful
-//clean up
-//by closing the socket and return 0
-//return 0 tells the OS that the program exited without errors
-
-printf( "[*]Done scanning \n" );
-printf( "[*]Cleaning up \n" );
-
-return 0;
-}
-
-int main( int argc, char *argv[] )
-{
-	
-	int input;
-	
-	printf( "[0] Exit \n" );
-	printf( "[1] Syn Scan \n" );
-	printf( "[*]Scan type: " );	
-	scanf( "%i", &input );
-	
-	//cannot equal 0
-	//since 0 is exit
-	if( input == 1 )
-	{
-			
-		syn_scan();
-			
-	}
 	//if equals 0, 
 	//throw a error and exit
 	else if( input == 0 )
